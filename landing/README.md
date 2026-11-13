@@ -17,22 +17,10 @@ Raw files are stored in a Unity Catalog managed Volume. The original CSV files a
 ## Directory Structure
 
 ```text
-raw_files/
-├── initial/
-│   ├── transactions/
-│   ├── customers/
-│   └── fraud_investigations/
-│
-└── scheduled_releases/
-    ├── day_3/
-    │   ├── transactions/
-    │   └── customers/
-    ├── day_5/
-    │   └── fraud_investigations/
-    ├── day_6/
-    │   └── transactions/
-    └── day_8/
-        └── fraud_investigations/
+data/
+├── transactions/
+├──  customers/
+├── fraud_investigations/
 ```
 
 ## Datasets
