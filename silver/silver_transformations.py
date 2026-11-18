@@ -150,10 +150,10 @@ def silver_transactions():
 
 # ------ FRAUD INVESTIGATIONS ------
 
-# SILVER FRAUD TRANSACTIONS
+# SILVER FRAUD INVESTIGATIONS
 @dlt.table(
     name=f"{catalog}.{silver_schema}.fraud_investigations",
-    comment="Cleaned fraud investegations: boolean fraud flag, 'none' for dismissed categories. Validated by quality expectations.",
+    comment="Cleaned fraud investigations: boolean fraud flag, 'none' for dismissed categories. Validated by quality expectations.",
     table_properties={"quality": "silver"}
 )
 
