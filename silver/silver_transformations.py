@@ -158,7 +158,7 @@ def silver_transactions():
 )
 
 # Invalid keys stop the pipeline instead of polluting silver
-@dlt.expect_or_fail("valid_investigation_id", "investigaition_id RLIKE '^INV[0-9]{9}$'")
+@dlt.expect_or_fail("valid_investigation_id", "investigation_id RLIKE '^INV[0-9]{9}$'")
 @dlt.expect_or_fail("valid_transaction_id", "transaction_id RLIKE '^TXN[0-9]{9}$'")
 
 # Records violating any of these checks are dropped and logged in pipeline metrics

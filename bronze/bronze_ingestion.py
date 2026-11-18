@@ -12,14 +12,14 @@ def ingest_to_bronze(dataset_name):
         .option("cloudFiles.format", "csv")
         .option("cloudFiles.inferColumnTypes", "true")
         .option("header", "true")
-        .load("source_path")
+        .load(source_path)
     )
 
     return (
         df 
         .withColumn("_ingestion_timestamp", F.current_timestamp())
         .withColumn("_source_file", F.col("_metadata.file_path"))
-        .withColumn("_release_id", F.regexp_extract(F.col("_metadata.file_path"), r"/(day_\d+)_"), 1)
+        .withColumn("_release_id", F.regexp_extract(F.col("_metadata.file_path"), r"/(day\d+)_", 1))
     )
 
 @dlt.table(name="transactions", table_properties={"quality": "bronze"})
