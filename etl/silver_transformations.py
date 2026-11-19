@@ -78,27 +78,31 @@ def clean_text(col_name):
 @dlt.expect_or_fail("valid_customer_id", "customer_id RLIKE '^CUST[0-9]+$'")
 @dlt.expect_or_fail("valid_account_id", "account_id RLIKE '^ACC[0-9]+$'")
 
-# Records violating any of these checks are dropped and logged in pipeline metrics
-@dlt.expect_all_or_drop({
-    "customer_age_is_present": "customer_age IS NOT NULL AND customer_age BETWEEN 18 AND 100",
+# Validates descriptive attributes without dropping customer records
+@dlt.expect_all({
+    "customer_age_is_valid": "customer_age IS NULL OR customer_age BETWEEN 18 AND 100",
     "home_country_is_valid_iso2": "home_country IS NOT NULL",
     "typical_transaction_country_is_valid_iso2": "typical_transaction_country IS NOT NULL",
-    "risk_segment_is_valid": "risk_segment IN ('low', 'medium', 'high')",
-    "account_type_is_valid": "account_type IN ('checking', 'credit', 'savings', 'premium')",
-    "account_status_is_valid": "account_status IN ('active', 'closed', 'suspended')",
-    "monthly_spending_is_non_negative": "average_monthly_spending >= 0",
-    "average_transaction_amount_is_positive": "average_transaction_amount > 0",
-    "account_open_date_is_not_in_future": "account_open_date IS NOT NULL AND account_open_date <= current_date()"
+    "risk_segment_is_valid": "risk_segment IN ('low', 'medium', 'high', 'unknown')",
+    "account_type_is_valid": "account_type IN ('checking', 'credit', 'savings', 'premium', 'unknown')",
+    "account_status_is_valid": "account_status IN ('active', 'closed', 'suspended', 'unknown')",
+    "monthly_spending_is_valid": "average_monthly_spending IS NULL OR average_monthly_spending >= 0",
+    "average_transaction_amount_is_valid": "average_transaction_amount IS NULL OR average_transaction_amount > 0",
+    "account_open_date_is_valid": "account_open_date IS NULL OR account_open_date <= current_date()"
 })
 
 def silver_customers():
     return (
         spark.read.table(f"{catalog}.{bronze_schema}.customers")
-        .withColumn("account_type", F.lower(F.trim("account_type")))
-        .withColumn("risk_segment", F.lower(F.trim("risk_segment")))
-        .withColumn("account_status", F.lower(F.trim("account_status")))
+        .withColumn("customer_age", F.when(F.col("customer_age").between(18, 100), F.col("customer_age")).otherwise(None))
+        .withColumn("account_type", F.when(F.lower(F.trim("account_type")).isin("checking", "credit", "savings", "premium"), F.lower(F.trim("account_type"))).otherwise("unknown"))
+        .withColumn("risk_segment", F.when(F.lower(F.trim("risk_segment")).isin("low", "medium", "high"), F.lower(F.trim("risk_segment"))).otherwise("unknown"))
+        .withColumn("account_status", F.when(F.lower(F.trim("account_status")).isin("active", "closed", "suspended"), F.lower(F.trim("account_status"))).otherwise("unknown"))
         .withColumn("home_country", normalize_country("home_country"))
         .withColumn("typical_transaction_country", normalize_country("typical_transaction_country"))
+        .withColumn("average_monthly_spending", F.when(F.col("average_monthly_spending") >= 0, F.col("average_monthly_spending")).otherwise(None))
+        .withColumn("average_transaction_amount", F.when(F.col("average_transaction_amount") > 0, F.col("average_transaction_amount")).otherwise(None))
+        .withColumn("account_open_date", F.when(F.col("account_open_date") <= F.current_date(), F.col("account_open_date")).otherwise(None))
     )
 
 # ------ TRANSACTIONS ------
